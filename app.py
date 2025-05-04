@@ -21,9 +21,11 @@ def predict():
         with torch.no_grad():
             outputs = model(**inputs)
         
-        # Process output
-        prediction = torch.argmax(outputs.logits).item()
-        return jsonify({"sentiment": prediction})
+        # Process output - Get label from model's config
+        prediction = torch.argmax(outputs.logits, dim=1).item()
+        sentiment_label = model.config.id2label[prediction]
+        
+        return jsonify({"sentiment": sentiment_label})
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
