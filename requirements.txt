@@ -1,4 +1,3 @@
-flask>=2.0.0
-torch>=2.0.0
-transformers>=4.30.0
-sentencepiece  # Add if using models like XLNet, T5, etc.
+Flask==2.1.2
+transformers==4.20.0
+torch==1.11.0
