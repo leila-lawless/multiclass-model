@@ -4,7 +4,6 @@ import os
 
 app = Flask(__name__)
 
-# Load the emotion classification pipeline
 emotion_classifier = pipeline(
     "text-classification",
     model="leila-may/multi-emotion",
@@ -15,8 +14,7 @@ emotion_classifier = pipeline(
 def home():
     return jsonify({
         "message": "Emotion Classification API",
-        "usage": "POST JSON to /predict with 'text' field",
-        "example": {"text": "I'm thrilled about the new discoveries!"}
+        "usage": "POST JSON to /predict with 'text' field"
     })
 
 @app.route('/predict', methods=['POST'])
@@ -24,12 +22,10 @@ def predict():
     try:
         data = request.get_json()
         if not data or 'text' not in data:
-            return jsonify({"error": "Please provide a 'text' field in JSON"}), 400
+            return jsonify({"error": "Missing 'text' in JSON"}), 400
             
-        text = data['text']
-        predictions = emotion_classifier(text)[0]
-        formatted = {item['label']: float(item['score']) for item in predictions}
-        return jsonify(formatted)
+        predictions = emotion_classifier(data['text'])[0]
+        return jsonify({item['label']: float(item['score']) for item in predictions})
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
