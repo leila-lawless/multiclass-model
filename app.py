@@ -1,33 +1,31 @@
-import os  
 from flask import Flask, request, jsonify
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
+from transformers import pipeline
+import os
+
+# Load the emotion classification model from Hugging Face
+model_name = "leila-may/multi-emotion"
+classifier = pipeline("text-classification", model=model_name)
 
 app = Flask(__name__)
 
-# Load model directly from Hugging Face Hub
-model_name = "leila-may/multi-emotion-model"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+@app.route('/')
+def home():
+    return "Emotion Model API is running!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        data = request.json
-        text = data['text']
-        
-        # Tokenize and predict
-        inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
-        with torch.no_grad():
-            outputs = model(**inputs)
-        
-        # Process output
-        prediction = torch.argmax(outputs.logits).item()
-        return jsonify({"sentiment": prediction})
+    # Get the text from the request body
+    data = request.get_json()
+    text = data.get("inputs")
     
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if not text:
+        return jsonify({"error": "No input text provided"}), 400
+    
+    # Get prediction from the model
+    prediction = classifier(text)
+    
+    # Return the prediction as a response
+    return jsonify(prediction)
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))
